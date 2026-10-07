@@ -1,32 +1,21 @@
-//
-//  archipelagoApp.swift
-//  archipelago
-//
-//  Created by Francis Tan on 07/10/2026.
-//
-
 import SwiftUI
-import SwiftData
 
 @main
 struct archipelagoApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
+    @StateObject private var idleController = IdleWatcher()
 
     var body: some Scene {
-        WindowGroup {
-            ContentView()
+        MenuBarExtra("Archipelago", systemImage: "hexagon.fill") {
+            Button("Launch Saver Now") {
+                idleController.triggerSaverManually()
+            }
+            Divider()
+            Toggle("Prevent System Sleep", isOn: $idleController.isSleepPrevented)
+            Divider()
+            Button("Quit") {
+                NSApplication.shared.terminate(nil)
+            }
+            .keyboardShortcut("q")
         }
-        .modelContainer(sharedModelContainer)
     }
 }

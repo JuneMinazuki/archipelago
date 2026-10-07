@@ -1,10 +1,3 @@
-//
-//  ContentView.swift
-//  archipelago
-//
-//  Created by Francis Tan on 07/10/2026.
-//
-
 import SwiftUI
 import SwiftData
 
