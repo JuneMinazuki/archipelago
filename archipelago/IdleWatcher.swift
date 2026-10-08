@@ -48,6 +48,34 @@ class IdleWatcher: ObservableObject {
         }
     }
 
+    // Check if another app is keeping the display awake
+    private func isOtherAppPreventingDisplaySleep() -> Bool {
+        var assertionsByProcess: Unmanaged<CFDictionary>?
+        guard IOPMCopyAssertionsByProcess(&assertionsByProcess) == kIOReturnSuccess,
+              let processDict = assertionsByProcess?.takeRetainedValue() as? [pid_t: [[String: Any]]] else {
+            return false
+        }
+
+        let myPID = ProcessInfo.processInfo.processIdentifier
+
+        for (pid, assertions) in processDict {
+            // Ignore power assertions created by app itself
+            if pid == myPID { continue }
+
+            for assertion in assertions {
+                guard let assertionType = assertion[kIOPMAssertionTypeKey as String] as? String else { continue }
+
+                // Check for display sleep prevention assertions created during media playback
+                if assertionType == (kIOPMAssertionTypePreventUserIdleDisplaySleep as String) ||
+                   assertionType == "NoDisplaySleepAssertion" {
+                    return true
+                }
+            }
+        }
+
+        return false
+    }
+
     // MARK: - Idle Polling
     private func startIdleMonitoring() {
         // Polls system idle time every 2 seconds
@@ -57,17 +85,24 @@ class IdleWatcher: ObservableObject {
     }
 
     private func checkIdleTime() {
-        // Reads macOS system-wide idle time across all events
+        // Suppress if media/calls/presentations are active
+        if isOtherAppPreventingDisplaySleep() {
+            if isSaverActive { dismissSaver() }
+            return
+        }
+
+        // Fetch system idle time
         let idleSeconds = CGEventSource.secondsSinceLastEventType(
             .combinedSessionState,
             eventType: CGEventType(rawValue: ~0)!
         )
 
-        if idleSeconds < idleThresholdSeconds && isSaverActive {
-            dismissSaver()
+        if idleSeconds < idleThresholdSeconds {
+            if isSaverActive { dismissSaver() }
+            return
         }
 
-        if idleSeconds >= idleThresholdSeconds && !isSaverActive {
+        if !isSaverActive {
             triggerSaver()
         }
     }
@@ -88,6 +123,6 @@ class IdleWatcher: ObservableObject {
     private func dismissSaver() {
         // Placeholder for closing your full-screen hexagon generator
         isSaverActive = false
-        print("Screensaver dismissed — user is active")
+        print("Screensaver dismissed")
     }
 }
