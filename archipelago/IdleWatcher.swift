@@ -14,7 +14,12 @@ class IdleWatcher: ObservableObject {
 
     private var assertionID: IOPMAssertionID = 0
     private var idleTimer: Timer?
-    private let idleThresholdSeconds: TimeInterval = 60
+    private let idleThresholdSeconds: TimeInterval = 5
+    
+    private var eventMonitor: Any?
+    private var globalEventMonitor: Any?
+    private var localEventMonitor: Any?
+    private var initialMouseLocation: NSPoint?
 
     init() {
         toggleSleepAssertion(isSleepPrevented)
@@ -97,12 +102,7 @@ class IdleWatcher: ObservableObject {
             eventType: CGEventType(rawValue: ~0)!
         )
 
-        if idleSeconds < idleThresholdSeconds {
-            if isSaverActive { dismissSaver() }
-            return
-        }
-
-        if !isSaverActive {
+        if idleSeconds >= idleThresholdSeconds && !isSaverActive {
             triggerSaver()
         }
     }
@@ -118,10 +118,67 @@ class IdleWatcher: ObservableObject {
         // Placeholder for displaying your full-screen hexagon generator
         isSaverActive = true
         print("Screensaver triggered")
+
+        // Wait a fraction of a second before monitoring
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            guard let self = self, self.isSaverActive else { return }
+            self.startDismissalMonitoring()
+        }
     }
 
+    private func startDismissalMonitoring() {
+        stopDismissalMonitoring()
+        
+        initialMouseLocation = NSEvent.mouseLocation
+        let eventMask: NSEvent.EventTypeMask = [.mouseMoved, .leftMouseDown, .rightMouseDown, .keyDown]
+
+        globalEventMonitor = NSEvent.addGlobalMonitorForEvents(matching: eventMask) { [weak self] event in
+            self?.handleDismissalEvent(event)
+        }
+
+        localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: eventMask) { [weak self] event in
+            self?.handleDismissalEvent(event)
+            return event
+        }
+    }
+
+    private func handleDismissalEvent(_ event: NSEvent) {
+        if event.type == .mouseMoved {
+            guard let initial = initialMouseLocation else { return }
+            let current = NSEvent.mouseLocation
+            let dx = current.x - initial.x
+            let dy = current.y - initial.y
+            let distance = hypot(dx, dy)
+
+            // Dismiss if mouse moved noticeably
+            if distance > 10 {
+                DispatchQueue.main.async { [weak self] in
+                    self?.dismissSaver()
+                }
+            }
+        } else {
+            // Dismiss if keyboard tap or mouse click
+            DispatchQueue.main.async { [weak self] in
+                self?.dismissSaver()
+            }
+        }
+    }
+
+    private func stopDismissalMonitoring() {
+        if let monitor = globalEventMonitor {
+            NSEvent.removeMonitor(monitor)
+            globalEventMonitor = nil
+        }
+        if let monitor = localEventMonitor {
+            NSEvent.removeMonitor(monitor)
+            localEventMonitor = nil
+        }
+        initialMouseLocation = nil
+    }
+    
     private func dismissSaver() {
         // Placeholder for closing your full-screen hexagon generator
+        stopDismissalMonitoring()
         isSaverActive = false
         print("Screensaver dismissed")
     }
