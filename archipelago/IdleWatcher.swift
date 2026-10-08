@@ -10,6 +10,8 @@ class IdleWatcher: ObservableObject {
         }
     }
 
+    @Published var isSaverActive: Bool = false
+
     private var assertionID: IOPMAssertionID = 0
     private var idleTimer: Timer?
     private let idleThresholdSeconds: TimeInterval = 60
@@ -60,19 +62,32 @@ class IdleWatcher: ObservableObject {
             .combinedSessionState,
             eventType: CGEventType(rawValue: ~0)!
         )
-        
-        if idleSeconds >= idleThresholdSeconds {
+
+        if idleSeconds < idleThresholdSeconds && isSaverActive {
+            dismissSaver()
+        }
+
+        if idleSeconds >= idleThresholdSeconds && !isSaverActive {
             triggerSaver()
         }
     }
 
     // MARK: - Actions
     func triggerSaverManually() {
-        triggerSaver()
+        if !isSaverActive {
+            triggerSaver()
+        }
     }
 
     private func triggerSaver() {
         // Placeholder for displaying your full-screen hexagon generator
+        isSaverActive = true
         print("Screensaver triggered")
+    }
+
+    private func dismissSaver() {
+        // Placeholder for closing your full-screen hexagon generator
+        isSaverActive = false
+        print("Screensaver dismissed — user is active")
     }
 }
