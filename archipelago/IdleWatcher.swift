@@ -2,6 +2,7 @@ import Foundation
 import Combine
 import IOKit.pwr_mgt
 import AppKit
+import SwiftUI
 
 class IdleWatcher: ObservableObject {
     @Published var isSleepPrevented: Bool = true {
@@ -20,6 +21,8 @@ class IdleWatcher: ObservableObject {
     private var globalEventMonitor: Any?
     private var localEventMonitor: Any?
     private var initialMouseLocation: NSPoint?
+    
+    private var saverWindows: [NSWindow] = []
 
     init() {
         toggleSleepAssertion(isSleepPrevented)
@@ -115,15 +118,54 @@ class IdleWatcher: ObservableObject {
     }
 
     private func triggerSaver() {
-        // Placeholder for displaying your full-screen hexagon generator
         isSaverActive = true
         print("Screensaver triggered")
+
+        // Display the screensaver window
+        DispatchQueue.main.async { [weak self] in
+            self?.showSaverWindows()
+        }
 
         // Wait a fraction of a second before monitoring
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
             guard let self = self, self.isSaverActive else { return }
             self.startDismissalMonitoring()
         }
+    }
+
+    // MARK: - Window Management
+    private func showSaverWindows() {
+        closeSaverWindows()
+
+        // Create a full-screen borderless window for each screen
+        for screen in NSScreen.screens {
+            let window = NSWindow(
+                contentRect: screen.frame,
+                styleMask: [.borderless],
+                backing: .buffered,
+                defer: false,
+                screen: screen
+            )
+            
+            window.level = .screenSaver
+            window.backgroundColor = .black
+            window.isOpaque = true
+            window.hasShadow = false
+            
+            window.contentView = NSHostingView(rootView: ScreensaverView())
+            window.makeKeyAndOrderFront(nil)
+            
+            saverWindows.append(window)
+        }
+        
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    private func closeSaverWindows() {
+        for window in saverWindows {
+            window.orderOut(nil)
+        }
+        saverWindows.removeAll()
     }
 
     private func startDismissalMonitoring() {
@@ -177,9 +219,13 @@ class IdleWatcher: ObservableObject {
     }
     
     private func dismissSaver() {
-        // Placeholder for closing your full-screen hexagon generator
         stopDismissalMonitoring()
         isSaverActive = false
+        
+        // Close the windows when dismissed
+        DispatchQueue.main.async { [weak self] in
+            self?.closeSaverWindows()
+        }
         print("Screensaver dismissed")
     }
 }
