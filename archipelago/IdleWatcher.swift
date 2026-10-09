@@ -159,6 +159,7 @@ class IdleWatcher: ObservableObject {
         }
         
         NSApp.activate(ignoringOtherApps: true)
+        CGDisplayHideCursor(CGMainDisplayID())
     }
 
     private func closeSaverWindows() {
@@ -166,6 +167,7 @@ class IdleWatcher: ObservableObject {
             window.orderOut(nil)
         }
         saverWindows.removeAll()
+        CGDisplayShowCursor(CGMainDisplayID())
     }
 
     private func startDismissalMonitoring() {
