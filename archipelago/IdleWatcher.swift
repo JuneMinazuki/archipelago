@@ -149,7 +149,8 @@ class IdleWatcher: ObservableObject {
             
             window.level = .screenSaver
             window.backgroundColor = .black
-            window.isOpaque = true
+            window.isOpaque = false
+            window.alphaValue = 0.0
             window.hasShadow = false
             
             window.contentView = NSHostingView(rootView: ScreensaverView())
@@ -160,6 +161,14 @@ class IdleWatcher: ObservableObject {
         
         NSApp.activate(ignoringOtherApps: true)
         CGDisplayHideCursor(CGMainDisplayID())
+
+        // Fade in effect
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.5
+            for window in saverWindows {
+                window.animator().alphaValue = 1.0
+            }
+        }
     }
 
     private func closeSaverWindows() {
@@ -224,10 +233,20 @@ class IdleWatcher: ObservableObject {
         stopDismissalMonitoring()
         isSaverActive = false
         
-        // Close the windows when dismissed
+        // Fade out effect
         DispatchQueue.main.async { [weak self] in
-            self?.closeSaverWindows()
+            guard let self = self else { return }
+            
+            NSAnimationContext.runAnimationGroup({ context in
+                context.duration = 0.2
+                for window in self.saverWindows {
+                    window.animator().alphaValue = 0.0
+                }
+            }, completionHandler: {
+                // Close the windows when dismissed
+                self.closeSaverWindows()
+                print("Screensaver dismissed")
+            })
         }
-        print("Screensaver dismissed")
     }
 }
