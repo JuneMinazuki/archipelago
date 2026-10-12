@@ -93,11 +93,11 @@ class IdleWatcher: ObservableObject {
     }
 
     private func checkIdleTime() {
+        // Skip if screen saver is already active
+        if isSaverActive { return }
+        
         // Suppress if media/calls/presentations are active
-        if isOtherAppPreventingDisplaySleep() {
-            if isSaverActive { dismissSaver() }
-            return
-        }
+        if isOtherAppPreventingDisplaySleep() { return }
 
         // Fetch system idle time
         let idleSeconds = CGEventSource.secondsSinceLastEventType(
