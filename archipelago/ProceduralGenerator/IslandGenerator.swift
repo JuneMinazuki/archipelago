@@ -18,10 +18,10 @@ struct HexTile: Identifiable {
 }
 
 class IslandGenerator {
-    private let noiseSource = GKPerlinNoiseSource(frequency: 4.0, octaveCount: 4, persistence: 0.5, lacunarity: 2.0, seed: Int32.random(in: 1...10000))
-    private lazy var noiseMap = GKNoise(noiseSource)
-
     func generateGrid(radius: Int) -> [HexTile] {
+        let noiseSource = GKPerlinNoiseSource(frequency: 4.0, octaveCount: 4, persistence: 0.5, lacunarity: 2.0, seed: Int32.random(in: 1...10000))
+        let noiseMap = GKNoise(noiseSource)
+        
         var tiles: [HexTile] = []
         let sampleDim = Int32(radius * 2)
         

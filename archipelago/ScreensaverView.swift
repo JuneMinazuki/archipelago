@@ -3,6 +3,7 @@ import Combine
 
 struct ScreensaverView: View {
     @State private var tiles: [HexTile] = []
+    @State private var contentOpacity: Double = 1.0
     let generator = IslandGenerator()
     
     let timer = Timer.publish(every: 8.0, on: .main, in: .common).autoconnect()
@@ -23,19 +24,31 @@ struct ScreensaverView: View {
                         
                         HexagonShape()
                             .fill(tile.biomeColor)
+                            .overlay(
+                                HexagonShape().stroke(tile.biomeColor, lineWidth: 1.0)
+                            )
                             .frame(width: size * 2, height: size * 2)
                             .position(x: width / 2 + x, y: height / 2 + y)
-                            .shadow(color: Color.black.opacity(0.3), radius: 1, x: 0, y: 1)
                     }
                 }
+                .compositingGroup()
             }
+            .opacity(contentOpacity)
         }
         .onAppear {
             tiles = generator.generateGrid(radius: 18)
         }
         .onReceive(timer) { _ in
-            withAnimation(.easeInOut(duration: 1.5)) {
+            withAnimation(.easeInOut(duration: 1.0)) {
+                contentOpacity = 0.0
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 tiles = generator.generateGrid(radius: 18)
+                
+                withAnimation(.easeInOut(duration: 1.0)) {
+                    contentOpacity = 1.0
+                }
             }
         }
     }
