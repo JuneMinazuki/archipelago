@@ -8,7 +8,7 @@ struct HexCoord: Hashable, Sendable {
 }
 
 struct HexTile: Identifiable, Sendable {
-    let id = UUID()
+    var id: String { "\(q),\(r)" }
     let q: Int
     let r: Int
     var elevation: Double
@@ -17,7 +17,8 @@ struct HexTile: Identifiable, Sendable {
         if elevation < 0.25 { return Color(red: 0.08, green: 0.25, blue: 0.55) }    // Deep Water
         if elevation < 0.35 { return Color(red: 0.15, green: 0.45, blue: 0.75) }    // Shallow Water
         if elevation < 0.41 { return Color(red: 0.82, green: 0.76, blue: 0.55) }    // Sand
-        if elevation < 0.68 { return Color(red: 0.22, green: 0.55, blue: 0.28) }    // Grass
+        if elevation < 0.55 { return Color(red: 0.22, green: 0.55, blue: 0.28) }    // Grass
+        if elevation < 0.68 { return Color(red: 0.12, green: 0.38, blue: 0.20) }    // Forest
         if elevation < 0.85 { return Color(red: 0.40, green: 0.40, blue: 0.42) }    // Mountain Rock
         return Color(red: 0.95, green: 0.95, blue: 0.98)                            // Snow Peak
     }
@@ -124,7 +125,7 @@ class IslandGenerator {
                 let neighbors = neighborCache[coord]!
                 
                 let isSnow = elevation >= 0.85
-                let isGrass = (elevation >= 0.41 && elevation < 0.68)
+                let isGrassOrForest = (elevation >= 0.41 && elevation < 0.68)
                 let isSand = (elevation >= 0.35 && elevation < 0.41)
                 
                 var touchesWater = false
@@ -146,8 +147,8 @@ class IslandGenerator {
                     updatedDict[coord] = 0.78 // Convert to mountian
                 }
                 
-                // Grass cannot touch water
-                if isGrass && touchesWater {
+                // Grass or forest cannot touch water
+                if isGrassOrForest && touchesWater {
                     updatedDict[coord] = 0.38 // Convert to sand
                 }
             }
@@ -165,6 +166,7 @@ class IslandGenerator {
                 var mountainNeighborCount = 0
                 var deepWaterNeighborCount = 0
                 var landNeighborCount = 0
+                var forestNeighborCount = 0
                 
                 for neighborCoord in neighbors {
                     let nElev = tileDict[neighborCoord]!
@@ -172,11 +174,22 @@ class IslandGenerator {
                     if nElev >= 0.68 { mountainNeighborCount += 1 }
                     if nElev < 0.25 { deepWaterNeighborCount += 1 }
                     if nElev >= 0.35 { landNeighborCount += 1 }
+                    if nElev >= 0.55 && nElev < 0.68 { forestNeighborCount += 1 }
                 }
                 
                 let neighborCount = Double(neighbors.count)
                 
-                // Remove isolated water tile
+                // Remove isolated tile
+                let isGrass = elevation >= 0.41 && elevation < 0.55
+                if isGrass && forestNeighborCount >= 2 {
+                    updatedDict[coord] = 0.60
+                }
+                
+                let isForest = elevation >= 0.55 && elevation < 0.68
+                if isForest && forestNeighborCount == 0 && mountainNeighborCount == 0 {
+                    updatedDict[coord] = 0.50
+                }
+                
                 if elevation < 0.25 && deepWaterNeighborCount == 0 && landNeighborCount >= 4 {
                     updatedDict[coord] = 0.38 // Convert to Sand
                 }
