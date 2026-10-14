@@ -13,7 +13,7 @@ struct ScreensaverView: View {
             Color.black.edgesIgnoringSafeArea(.all)
             
             GeometryReader { geometry in
-                let size: CGFloat = 20 // Hexagon radius size
+                let size: CGFloat = 25 // Hexagon radius size
                 let width = geometry.size.width
                 let height = geometry.size.height
                 
