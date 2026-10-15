@@ -2,12 +2,12 @@ import Foundation
 import SwiftUI
 import GameplayKit
 
-struct HexCoord: Hashable, Sendable {
+nonisolated struct HexCoord: Hashable, Sendable {
     let q: Int
     let r: Int
 }
 
-struct HexTile: Identifiable, Sendable {
+nonisolated struct HexTile: Identifiable, Sendable {
     var id: String { "\(q),\(r)" }
     let q: Int
     let r: Int
@@ -24,7 +24,7 @@ struct HexTile: Identifiable, Sendable {
     }
 }
 
-class IslandGenerator {
+nonisolated final class IslandGenerator: Sendable {
     
     // Axial directions for the 6 neighbors
     private let hexDirections: [HexCoord] = [

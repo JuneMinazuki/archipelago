@@ -1,18 +1,25 @@
 import SwiftUI
 import Combine
 
+struct RenderableTile {
+    let q: Int
+    let r: Int
+    let biomeColor: Color
+    let path: Path
+}
+
 struct ScreensaverView: View {
-    @State private var tiles: [HexTile] = []
+    @State private var renderableTiles: [RenderableTile] = []
     @State private var animationStartDate: Date? = nil
-    @State private var contentOpacity: Double = 0.0
+    @State private var contentOpacity: Double = 1.0
     @State private var animationProgress: Double = 0.0
     @State private var isHolding: Bool = false
     let generator = IslandGenerator()
     
     // Animation phases (in seconds)
-    let animationDuration: Double = 35.0
-    let holdDuration: Double = 5.0
-    let fadeDuration: Double = 1.0
+    let animationDuration: Double = 10.0
+    let holdDuration: Double = 15.0
+    let fadeDuration: Double = 5.0
 
     var body: some View {
         ZStack {
@@ -35,31 +42,12 @@ struct ScreensaverView: View {
                     }()
                     
                     Canvas { context, canvasSize in
-                        let countToDraw = Int(progress * Double(tiles.count))
-                        let visibleTiles = tiles.prefix(countToDraw)
+                        let countToDraw = Int(progress * Double(renderableTiles.count))
+                        let visibleTiles = renderableTiles.prefix(countToDraw)
                         
                         for tile in visibleTiles {
-                            let x = size * (sqrt(3.0) * CGFloat(tile.q) + sqrt(3.0) / 2.0 * CGFloat(tile.r))
-                            let y = size * (3.0 / 2.0 * CGFloat(tile.r))
-                            
-                            let centerX = canvasSize.width / 2 + x
-                            let centerY = canvasSize.height / 2 + y
-                            
-                            var path = Path()
-                            for i in 0..<6 {
-                                let angle = CGFloat(i) * .pi / 3.0 + .pi / 6.0
-                                let hx = centerX + size * cos(angle)
-                                let hy = centerY + size * sin(angle)
-                                if i == 0 {
-                                    path.move(to: CGPoint(x: hx, y: hy))
-                                } else {
-                                    path.addLine(to: CGPoint(x: hx, y: hy))
-                                }
-                            }
-                            path.closeSubpath()
-                            
-                            context.fill(path, with: .color(tile.biomeColor))
-                            context.stroke(path, with: .color(tile.biomeColor), lineWidth: 1.0)
+                            context.fill(tile.path, with: .color(tile.biomeColor))
+                            context.stroke(tile.path, with: .color(tile.biomeColor), lineWidth: 1.0)
                         }
                     }
                     .onChange(of: progress) { oldValue, newValue in
@@ -77,49 +65,65 @@ struct ScreensaverView: View {
         }
     }
     
-    // Generates grid and fades in
+    // Generates grid
     private func startCycle(radius: Int, size: CGFloat, width: CGFloat, height: CGFloat) {
         isHolding = false
         animationProgress = 0.0
-        DispatchQueue.global(qos: .userInitiated).async { [generator] in
+        
+        Task.detached(priority: .userInitiated) {
+            let generator = IslandGenerator()
             let rawTiles = generator.generateGrid(radius: radius)
             
             let halfWidth = width / 2
             let halfHeight = height / 2
             
-            let sortedTiles = rawTiles.sorted { t1, t2 in
-                func pixelPos(_ tile: HexTile) -> (x: CGFloat, y: CGFloat) {
-                    let x = size * (sqrt(3.0) * CGFloat(tile.q) + sqrt(3.0) / 2.0 * CGFloat(tile.r))
-                    let y = size * (3.0 / 2.0 * CGFloat(tile.r))
-                    return (x, y)
-                }
-                
-                let pos1 = pixelPos(t1)
-                let pos2 = pixelPos(t2)
-                
-                let isVisible1 = abs(pos1.x) <= halfWidth + size && abs(pos1.y) <= halfHeight + size
-                let isVisible2 = abs(pos2.x) <= halfWidth + size && abs(pos2.y) <= halfHeight + size
-                
-                if isVisible1 != isVisible2 {
-                    return isVisible1
-                }
-                
-                let d1 = pos1.x * pos1.x + pos1.y * pos1.y
-                let d2 = pos2.x * pos2.x + pos2.y * pos2.y
-                return d1 < d2
+            let filteredTiles = rawTiles.filter { tile in
+                let x = size * (sqrt(3.0) * CGFloat(tile.q) + sqrt(3.0) / 2.0 * CGFloat(tile.r))
+                let y = size * (3.0 / 2.0 * CGFloat(tile.r))
+                return abs(x) <= halfWidth + (size * 3) && abs(y) <= halfHeight + (size * 3)
             }
             
-            DispatchQueue.main.async {
-                self.tiles = sortedTiles
-                self.animationStartDate = nil
+            let sortedTiles = filteredTiles.sorted { t1, t2 in
+                let x1 = size * (sqrt(3.0) * CGFloat(t1.q) + sqrt(3.0) / 2.0 * CGFloat(t1.r))
+                let y1 = size * (3.0 / 2.0 * CGFloat(t1.r))
+                let x2 = size * (sqrt(3.0) * CGFloat(t2.q) + sqrt(3.0) / 2.0 * CGFloat(t2.r))
+                let y2 = size * (3.0 / 2.0 * CGFloat(t2.r))
                 
-                withAnimation(.easeInOut(duration: fadeDuration)) {
-                    contentOpacity = 1.0
-                }
+                return (x1 * x1 + y1 * y1) < (x2 * x2 + y2 * y2)
+            }
+            
+            let finalRenderableTiles: [RenderableTile] = sortedTiles.map { tile in
+                let x = size * (sqrt(3.0) * CGFloat(tile.q) + sqrt(3.0) / 2.0 * CGFloat(tile.r))
+                let y = size * (3.0 / 2.0 * CGFloat(tile.r))
                 
-                DispatchQueue.main.asyncAfter(deadline: .now() + fadeDuration) {
-                    self.animationStartDate = Date()
+                let centerX = halfWidth + x
+                let centerY = halfHeight + y
+                
+                var path = Path()
+                for i in 0..<6 {
+                    let angle = CGFloat(i) * .pi / 3.0 + .pi / 6.0
+                    let hx = centerX + size * cos(angle)
+                    let hy = centerY + size * sin(angle)
+                    if i == 0 {
+                        path.move(to: CGPoint(x: hx, y: hy))
+                    } else {
+                        path.addLine(to: CGPoint(x: hx, y: hy))
+                    }
                 }
+                path.closeSubpath()
+                
+                return RenderableTile(
+                    q: tile.q,
+                    r: tile.r,
+                    biomeColor: tile.biomeColor,
+                    path: path
+                )
+            }
+            
+            await MainActor.run {
+                self.renderableTiles = finalRenderableTiles
+                self.contentOpacity = 1.0
+                self.animationStartDate = Date()
             }
         }
     }
@@ -134,6 +138,8 @@ struct ScreensaverView: View {
             }
             
             DispatchQueue.main.asyncAfter(deadline: .now() + fadeDuration) {
+                self.renderableTiles = []
+                
                 let dynQR = Int(ceil(width / (sqrt(3.0) * size))) + 2
                 let dynRR = Int(ceil(height / (1.5 * size))) + 2
                 let dynamicRadius = max(dynQR, dynRR)
