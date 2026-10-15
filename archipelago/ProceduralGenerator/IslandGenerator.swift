@@ -7,7 +7,7 @@ nonisolated struct HexCoord: Hashable, Sendable {
     let r: Int
 }
 
-nonisolated struct HexTile: Identifiable, Sendable {
+nonisolated struct HexTile: Identifiable, Sendable, Hashable {
     var id: String { "\(q),\(r)" }
     let q: Int
     let r: Int
