@@ -81,5 +81,6 @@ vertex VertexOut hexagonVertex(uint vertexID [[vertex_id]],
 }
 
 fragment float4 hexagonFragment(VertexOut in [[stage_in]]) {
-    return in.color;
+    float darkFilter = 0.5f;
+    return float4(in.color.rgb * darkFilter, in.color.a);
 }

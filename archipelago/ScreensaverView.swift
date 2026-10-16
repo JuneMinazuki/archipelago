@@ -8,6 +8,11 @@ struct ScreensaverView: View {
     @State private var contentOpacity: Double = 1.0
     @State private var isHolding: Bool = false
     
+    // Get Macbook's name
+    private let computerName: String = {
+        return Host.current().localizedName ?? "MacBook Pro"
+    }()
+    
     // Animation phases (in seconds)
     let animationDuration: Double = 10.0
     let holdDuration: Double = 15.0
@@ -49,6 +54,34 @@ struct ScreensaverView: View {
                     generateInitialGrid(radius: maxRadius, size: size, width: width, height: height)
                 }
             }
+            
+            VStack {
+                TimelineView(.periodic(from: .now, by: 1.0)) { context in
+                    VStack(spacing: 6) {
+                        Text(context.date, format: .dateTime.hour().minute())
+                            .font(.system(size: 84, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+                        
+                        Text(context.date, format: .dateTime.weekday(.wide).month(.wide).day())
+                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .foregroundColor(.white.opacity(0.9))
+                    }
+                    .shadow(color: .black.opacity(0.7), radius: 6, x: 0, y: 3)
+                    .padding(.top, 90)
+                }
+                Spacer()
+            }
+            .allowsHitTesting(false)
+            
+            VStack {
+                Spacer()
+                Text(computerName)
+                    .font(.system(size: 18, weight: .medium, design: .rounded))
+                    .foregroundColor(.white.opacity(0.9))
+                    .shadow(color: .black.opacity(0.7), radius: 6, x: 0, y: 3)
+                    .padding(.bottom, 40)
+            }
+            .allowsHitTesting(false)
         }
     }
     
