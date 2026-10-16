@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		15A566FF3076299100F08D3D /* archipelago.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = archipelago.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		150B711530823AB800A37D8A /* archipelago.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = archipelago.app; path = /Users/francis/Documents/GitHub/archipelago/build/Debug/archipelago.app; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -31,16 +31,7 @@
 			isa = PBXGroup;
 			children = (
 				15A567013076299100F08D3D /* archipelago */,
-				15A567003076299100F08D3D /* Products */,
 			);
-			sourceTree = "<group>";
-		};
-		15A567003076299100F08D3D /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				15A566FF3076299100F08D3D /* archipelago.app */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -61,7 +52,7 @@
 			);
 			name = archipelago;
 			productName = archipelago;
-			productReference = 15A566FF3076299100F08D3D /* archipelago.app */;
+			productReference = 150B711530823AB800A37D8A /* archipelago.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -89,7 +80,7 @@
 			mainGroup = 15A566F63076299100F08D3D;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 15A567003076299100F08D3D /* Products */;
+			productRefGroup = 15A566F63076299100F08D3D;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -238,13 +229,17 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Archipelago;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -269,13 +264,17 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Archipelago;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (

@@ -146,6 +146,7 @@ struct MetalMapView: NSViewRepresentable {
             var hexRadius = Float(currentPointSize) * scale
             var maxDistSq = maxDistanceSq
             var progressVal = currentProgress
+            var filterValue = Float(SaverSettings.shared.darkFilter)
 
             let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor)
             encoder?.setRenderPipelineState(pipelineState)
@@ -154,6 +155,7 @@ struct MetalMapView: NSViewRepresentable {
             encoder?.setVertexBytes(&viewSize, length: MemoryLayout<simd_float2>.size, index: 2)
             encoder?.setVertexBytes(&maxDistSq, length: MemoryLayout<Float>.size, index: 3)
             encoder?.setVertexBytes(&progressVal, length: MemoryLayout<Float>.size, index: 4)
+            encoder?.setFragmentBytes(&filterValue, length: MemoryLayout<Float>.size, index: 0)
             
             encoder?.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 18, instanceCount: totalInstanceCount)
             encoder?.endEncoding()

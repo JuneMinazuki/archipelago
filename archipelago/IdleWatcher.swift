@@ -15,7 +15,9 @@ class IdleWatcher: ObservableObject {
 
     private var assertionID: IOPMAssertionID = 0
     private var idleTimer: Timer?
-    private let idleThresholdSeconds: TimeInterval = 5
+    private var idleThresholdSeconds: TimeInterval {
+        return SaverSettings.shared.idleThresholdMinutes * 60.0
+    }
     
     private var eventMonitor: Any?
     private var globalEventMonitor: Any?

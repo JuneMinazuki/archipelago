@@ -2,21 +2,18 @@ import SwiftUI
 import Combine
 
 struct ScreensaverView: View {
+    @ObservedObject private var settings = SaverSettings.shared
+    
     @State private var sortedTiles: [HexTile] = []
     @State private var nextTiles: [HexTile] = []
     @State private var animationStartDate: Date? = nil
     @State private var contentOpacity: Double = 1.0
     @State private var isHolding: Bool = false
     
-    // Get Macbook's name
-    private let computerName: String = {
-        return Host.current().localizedName ?? "MacBook Pro"
-    }()
-    
     // Animation phases (in seconds)
-    let animationDuration: Double = 10.0
-    let holdDuration: Double = 15.0
-    let fadeDuration: Double = 5.0
+    var animationDuration: Double { settings.animationDuration }
+    var holdDuration: Double { settings.holdDuration }
+    var fadeDuration: Double { settings.fadeDuration }
 
     var body: some View {
         ZStack {
@@ -73,15 +70,17 @@ struct ScreensaverView: View {
             }
             .allowsHitTesting(false)
             
-            VStack {
-                Spacer()
-                Text(computerName)
-                    .font(.system(size: 18, weight: .medium, design: .rounded))
-                    .foregroundColor(.white.opacity(0.9))
-                    .shadow(color: .black.opacity(0.7), radius: 6, x: 0, y: 3)
-                    .padding(.bottom, 40)
+            if settings.showCustomText {
+                VStack {
+                    Spacer()
+                    Text(settings.customBottomText)
+                        .font(.system(size: 18, weight: .medium, design: .rounded))
+                        .foregroundColor(.white.opacity(0.9))
+                        .shadow(color: .black.opacity(0.7), radius: 6, x: 0, y: 3)
+                        .padding(.bottom, 40)
+                }
+                .allowsHitTesting(false)
             }
-            .allowsHitTesting(false)
         }
     }
     
