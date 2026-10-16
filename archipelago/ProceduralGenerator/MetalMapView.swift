@@ -3,7 +3,7 @@ import MetalKit
 
 struct HexInstance {
     var centerPosition: simd_float2
-    var color: simd_float4
+    var elevation: Float
     var distanceFromCenter: Float
 }
 
@@ -44,6 +44,7 @@ struct MetalMapView: NSViewRepresentable {
         var currentInstanceCount: Int = 0
         
         private var lastTileHash: Int = 0
+        var currentPointSize: CGFloat = 25.0
 
         init(_ parent: MetalMapView) {
             self.parent = parent
@@ -75,6 +76,8 @@ struct MetalMapView: NSViewRepresentable {
         func updateTiles(_ tiles: [HexTile], pointSize: CGFloat, progress: Double, viewSize: CGSize, boundsSize: CGSize) {
             guard let device = device, viewSize.width > 0, viewSize.height > 0 else { return }
             
+            currentPointSize = pointSize
+            
             if tiles.isEmpty {
                 instanceBuffer = nil
                 totalInstanceCount = 0
@@ -83,15 +86,16 @@ struct MetalMapView: NSViewRepresentable {
                 return
             }
             
-            let tileHash = tiles.hashValue
-            let scale = Float(viewSize.width / boundsSize.width)
-            let hexRadius = Float(pointSize) * scale
-            let halfW = Float(viewSize.width / 2.0)
-            let floatH = Float(viewSize.height / 2.0)
+            let currentHash = tiles.count ^ (tiles.first.map { Int($0.elevation * 1000) } ?? 0)
             
-            // Only rebuild buffer if tiles actually changed
-            if instanceBuffer == nil || tileHash != lastTileHash {
-                lastTileHash = tileHash
+            if instanceBuffer == nil || currentHash != lastTileHash {
+                lastTileHash = currentHash
+                
+                let scale = Float(viewSize.width / boundsSize.width)
+                let hexRadius = Float(pointSize) * scale
+                let halfW = Float(viewSize.width / 2.0)
+                let floatH = Float(viewSize.height / 2.0)
+                
                 var instances: [HexInstance] = []
                 instances.reserveCapacity(tiles.count)
                 
@@ -106,24 +110,20 @@ struct MetalMapView: NSViewRepresentable {
                     let centerX = x + halfW
                     let centerY = y + floatH
                     
-                    let nsColor = tile.biomeColor
-                    var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
-                    NSColor(nsColor).getRed(&red, green: &green, blue: &blue, alpha: &alpha)
-                    let colorVector = simd_float4(Float(red), Float(green), Float(blue), Float(alpha))
-                    
-                    instances.append(HexInstance(centerPosition: simd_float2(centerX, centerY),
-                                                 color: colorVector,
-                                                 distanceFromCenter: distSq))
+                    instances.append(HexInstance(
+                        centerPosition: simd_float2(centerX, centerY),
+                        elevation: Float(tile.elevation),
+                        distanceFromCenter: distSq
+                    ))
                 }
                 
                 totalInstanceCount = instances.count
                 if totalInstanceCount > 0 {
-                    // Use resource options to optimize streaming/updates if needed
                     instanceBuffer = device.makeBuffer(bytes: instances, length: MemoryLayout<HexInstance>.stride * totalInstanceCount, options: .storageModeShared)
                 }
             }
             
-            currentInstanceCount = Int(progress * Double(tiles.count))
+            currentInstanceCount = max(1, Int(progress * Double(totalInstanceCount)))
         }
 
         func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {}
@@ -139,7 +139,7 @@ struct MetalMapView: NSViewRepresentable {
             var viewSize = simd_float2(Float(view.drawableSize.width), Float(view.drawableSize.height))
             let boundsSize = view.bounds.size.width > 0 ? view.bounds.size : CGSize(width: 800, height: 600)
             let scale = Float(view.drawableSize.width / boundsSize.width)
-            var hexRadius = Float(25) * scale // Match your hexagon radius size
+            var hexRadius = Float(currentPointSize) * scale
 
             let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor)
             encoder?.setRenderPipelineState(pipelineState)

@@ -108,24 +108,20 @@ struct ScreensaverView: View {
             }
             
             DispatchQueue.main.asyncAfter(deadline: .now() + fadeDuration) {
-                self.sortedTiles = []
-                
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                    if !self.nextTiles.isEmpty {
-                        self.animationStartDate = nil
-                        self.sortedTiles = self.nextTiles
-                        self.nextTiles = []
-                    }
-                    
-                    self.contentOpacity = 1.0
-                    self.animationStartDate = Date()
-                    self.isHolding = false
-                    
-                    let dynQR = Int(ceil(width / (sqrt(3.0) * size))) + 2
-                    let dynRR = Int(ceil(height / (1.5 * size))) + 2
-                    let dynamicRadius = max(dynQR, dynRR)
-                    prepareNextGrid(radius: dynamicRadius, size: size, width: width, height: height)
+                if !self.nextTiles.isEmpty {
+                    self.animationStartDate = nil
+                    self.sortedTiles = self.nextTiles
+                    self.nextTiles = []
                 }
+                
+                self.contentOpacity = 1.0
+                self.animationStartDate = Date()
+                self.isHolding = false
+                
+                let dynQR = Int(ceil(width / (sqrt(3.0) * size))) + 2
+                let dynRR = Int(ceil(height / (1.5 * size))) + 2
+                let dynamicRadius = max(dynQR, dynRR)
+                prepareNextGrid(radius: dynamicRadius, size: size, width: width, height: height)
             }
         }
     }
