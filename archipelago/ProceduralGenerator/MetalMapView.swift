@@ -18,15 +18,17 @@ struct MetalMapView: NSViewRepresentable {
         mtkView.clearColor = MTLClearColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0)
         mtkView.colorPixelFormat = .bgra8Unorm
         mtkView.delegate = context.coordinator
-        mtkView.preferredFramesPerSecond = 30
+        mtkView.preferredFramesPerSecond = 60
         mtkView.isPaused = false
-        mtkView.enableSetNeedsDisplay = false
+        mtkView.enableSetNeedsDisplay = true
         return mtkView
     }
 
     func updateNSView(_ nsView: MTKView, context: Context) {
         let boundsSize = nsView.bounds.size.width > 0 ? nsView.bounds.size : CGSize(width: 800, height: 600)
         context.coordinator.updateTiles(tiles, pointSize: size, progress: animationProgress, viewSize: nsView.drawableSize, boundsSize: boundsSize)
+        
+        nsView.setNeedsDisplay(nsView.bounds)
     }
 
     func makeCoordinator() -> Coordinator {
@@ -41,7 +43,8 @@ struct MetalMapView: NSViewRepresentable {
         
         var instanceBuffer: MTLBuffer?
         var totalInstanceCount: Int = 0
-        var currentInstanceCount: Int = 0
+        var maxDistanceSq: Float = 1.0
+        var currentProgress: Float = 0.0
         
         private var lastTileHash: Int = 0
         var currentPointSize: CGFloat = 25.0
@@ -74,14 +77,14 @@ struct MetalMapView: NSViewRepresentable {
         }
 
         func updateTiles(_ tiles: [HexTile], pointSize: CGFloat, progress: Double, viewSize: CGSize, boundsSize: CGSize) {
+            currentProgress = Float(progress)
             guard let device = device, viewSize.width > 0, viewSize.height > 0 else { return }
             
             currentPointSize = pointSize
             
             if tiles.isEmpty {
                 instanceBuffer = nil
-                totalInstanceCount = 0
-                currentInstanceCount = 0
+                totalInstanceCount = Int(0)
                 lastTileHash = 0
                 return
             }
@@ -98,6 +101,7 @@ struct MetalMapView: NSViewRepresentable {
                 
                 var instances: [HexInstance] = []
                 instances.reserveCapacity(tiles.count)
+                var maxDist: Float = 0.0
                 
                 for tile in tiles {
                     let q = Float(tile.q)
@@ -106,6 +110,7 @@ struct MetalMapView: NSViewRepresentable {
                     let x = hexRadius * (sqrt(3.0) * q + sqrt(3.0) / 2.0 * r)
                     let y = hexRadius * (3.0 / 2.0 * r)
                     let distSq = x * x + y * y
+                    if distSq > maxDist { maxDist = distSq }
                     
                     let centerX = x + halfW
                     let centerY = y + floatH
@@ -117,13 +122,12 @@ struct MetalMapView: NSViewRepresentable {
                     ))
                 }
                 
+                maxDistanceSq = max(maxDist, 1.0)
                 totalInstanceCount = instances.count
                 if totalInstanceCount > 0 {
                     instanceBuffer = device.makeBuffer(bytes: instances, length: MemoryLayout<HexInstance>.stride * totalInstanceCount, options: .storageModeShared)
                 }
             }
-            
-            currentInstanceCount = max(1, Int(progress * Double(totalInstanceCount)))
         }
 
         func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {}
@@ -134,20 +138,24 @@ struct MetalMapView: NSViewRepresentable {
                   let descriptor = view.currentRenderPassDescriptor,
                   let drawable = view.currentDrawable,
                   let instanceBuffer = instanceBuffer,
-                  currentInstanceCount > 0 else { return }
+                  totalInstanceCount > 0 else { return }
 
             var viewSize = simd_float2(Float(view.drawableSize.width), Float(view.drawableSize.height))
             let boundsSize = view.bounds.size.width > 0 ? view.bounds.size : CGSize(width: 800, height: 600)
             let scale = Float(view.drawableSize.width / boundsSize.width)
             var hexRadius = Float(currentPointSize) * scale
+            var maxDistSq = maxDistanceSq
+            var progressVal = currentProgress
 
             let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor)
             encoder?.setRenderPipelineState(pipelineState)
             encoder?.setVertexBuffer(instanceBuffer, offset: 0, index: 0)
             encoder?.setVertexBytes(&hexRadius, length: MemoryLayout<Float>.size, index: 1)
             encoder?.setVertexBytes(&viewSize, length: MemoryLayout<simd_float2>.size, index: 2)
+            encoder?.setVertexBytes(&maxDistSq, length: MemoryLayout<Float>.size, index: 3)
+            encoder?.setVertexBytes(&progressVal, length: MemoryLayout<Float>.size, index: 4)
             
-            encoder?.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 18, instanceCount: currentInstanceCount)
+            encoder?.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 18, instanceCount: totalInstanceCount)
             encoder?.endEncoding()
             
             commandBuffer.present(drawable)
