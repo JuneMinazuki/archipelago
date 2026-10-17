@@ -19,7 +19,6 @@ class IdleWatcher: ObservableObject {
         return SaverSettings.shared.idleThresholdMinutes * 60.0
     }
     
-    private var eventMonitor: Any?
     private var globalEventMonitor: Any?
     private var localEventMonitor: Any?
     private var initialMouseLocation: NSPoint?
@@ -98,6 +97,9 @@ class IdleWatcher: ObservableObject {
         // Skip if screen saver is already active
         if isSaverActive { return }
         
+        // Skip if "Prevent System Sleep" if off
+        guard isSleepPrevented else { return }
+        
         // Suppress if media/calls/presentations are active
         if isOtherAppPreventingDisplaySleep() { return }
 
@@ -121,7 +123,6 @@ class IdleWatcher: ObservableObject {
 
     private func triggerSaver() {
         isSaverActive = true
-        print("Screensaver triggered")
 
         // Display the screensaver window
         DispatchQueue.main.async { [weak self] in
@@ -247,7 +248,6 @@ class IdleWatcher: ObservableObject {
             }, completionHandler: {
                 // Close the windows when dismissed
                 self.closeSaverWindows()
-                print("Screensaver dismissed")
             })
         }
     }

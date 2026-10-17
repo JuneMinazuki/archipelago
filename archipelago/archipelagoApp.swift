@@ -6,7 +6,7 @@ struct ArchipelagoApp: App {
     @Environment(\.openSettings) private var openSettings
 
     var body: some Scene {
-        MenuBarExtra("Archipelago", systemImage: "hexagon.fill") {
+        MenuBarExtra("Archipelago", systemImage: idleController.isSleepPrevented ? "hexagon.fill" : "hexagon") {
             Button("Launch Saver Now") {
                 idleController.triggerSaverManually()
             }
