@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		150B711530823AB800A37D8A /* archipelago.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = archipelago.app; path = /Users/francis/Documents/GitHub/archipelago/build/Debug/archipelago.app; sourceTree = "<absolute>"; };
+		150B711530823AB800A37D8A /* archipelago.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = archipelago.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -31,6 +31,7 @@
 			isa = PBXGroup;
 			children = (
 				15A567013076299100F08D3D /* archipelago */,
+				150B711530823AB800A37D8A /* archipelago.app */,
 			);
 			sourceTree = "<group>";
 		};
@@ -227,8 +228,9 @@
 		15A5670D3076299300F08D3D /* Debug configuration for PBXNativeTarget "archipelago" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = archipelago;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -246,6 +248,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.juneminazuki.archipelago;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -262,8 +265,9 @@
 		15A5670E3076299300F08D3D /* Release configuration for PBXNativeTarget "archipelago" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = archipelago;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -281,6 +285,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.juneminazuki.archipelago;
 				PRODUCT_NAME = "$(TARGET_NAME)";
