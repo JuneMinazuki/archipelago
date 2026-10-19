@@ -1,6 +1,11 @@
 <img width="1280" height="640" alt="Banner" src="https://github.com/user-attachments/assets/83e49b06-0493-4523-95a3-cb7f153cbf1f" />
 
-<p align="center"><b>Archipelago</b> is a native macOS menu bar application that prevents your Mac from locking into the login screen by running a hypnotic, procedurally generated hexagonal island screensaver.</p>
+<div align="center">
+<p><b>Archipelago</b> is a native macOS menu bar application that prevents your Mac from locking into the login screen by running a hypnotic, procedurally generated hexagonal island screensaver.</p>
+
+[![Latest Release](https://img.shields.io/badge/Download-0078D6?style=for-the-badge&logo=Apple&logoColor=white)](https://github.com/JuneMinazuki/archipelago/releases/download/V1.0/Archipelago.V1.0.dmg)
+
+</div>
 
 ---
 
